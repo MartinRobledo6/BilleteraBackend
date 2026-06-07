@@ -1,0 +1,6 @@
+@ApiCriptomonedas_HostAddress = http://localhost:5139
+
+GET {{ApiCriptomonedas_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
