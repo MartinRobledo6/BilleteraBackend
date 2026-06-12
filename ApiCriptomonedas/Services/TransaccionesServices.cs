@@ -18,16 +18,62 @@ namespace ApiCriptomonedas.Services
             _httpClient = httpClient;
         }
 
-        public async Task<IEnumerable<Transacciones>> GetTransacciones()
+        public async Task<List<TransaccionesDTO>> Get()
         {
-            return await _context.Transacciones
-                           .OrderByDescending(t => t.DateTime)
-                           .ToListAsync();
+            var transacciones = await _context.Transacciones
+                                       .OrderByDescending(t => t.DateTime)
+                                       .ToListAsync();
+            var transaccionesDTO = transacciones.Select(t => new TransaccionesDTO
+            {
+                Id = t.Id,
+                crypto_code = t.CryptoCode,
+                action = t.Action,
+                crypto_amount = t.CryptoAmount,
+                money = t.Money,
+                datetime = t.DateTime,
+            }).ToList();
+
+            return transaccionesDTO;
         }
 
-        public async Task<Transacciones> AddTransaccion(TransaccionesDTO transaccion)
+        public async Task<TransaccionesDTO?> GetTransacciones(int id)
+        {
+            var transacciones = await _context.Transacciones.FindAsync(id);
+            if (transacciones == null)
+            {
+                return null;
+            }
+            return new TransaccionesDTO
+            {
+                Id = transacciones.Id,
+                crypto_code = transacciones.CryptoCode,
+                action = transacciones.Action,
+                crypto_amount = transacciones.CryptoAmount,
+                money = transacciones.Money,
+                datetime = transacciones.DateTime,
+            };
+        }
+
+        public async Task<TransaccionesDTO> Post(TransaccionesDTO transaccion)
         {
             string cryptoCodeLower = transaccion.crypto_code.ToLower();
+
+            if (transaccion.action == "sale")
+            {
+                var totalComprado = await _context.Transacciones
+                             .Where(t => t.CryptoCode == transaccion.crypto_code && t.Action == "purchase")
+                             .SumAsync(t => t.CryptoAmount);
+
+                var totalVendido = await _context.Transacciones
+                             .Where(t => t.CryptoCode == transaccion.crypto_code && t.Action == "sale")
+                             .SumAsync(t => t.CryptoAmount);
+
+                var saldoDisponible = totalComprado - totalVendido;
+                if (saldoDisponible < transaccion.crypto_amount)
+                {
+                    throw new Exception("No tenes saldo suficiente para vender esa cantidad");
+                }
+            }
 
             string urlCriptoya = $"https://criptoya.com/api/fiwind/{cryptoCodeLower}/ars";
 
@@ -52,7 +98,7 @@ namespace ApiCriptomonedas.Services
             }
             catch (Exception ex)
             {
-                throw new Exception("Error al consultar CryptoYa" + ex.Message);
+                throw new Exception("Error al consultar CryptoYa: " + ex.Message);
             }
 
             decimal totalGastado = precio * transaccion.crypto_amount;
@@ -69,8 +115,48 @@ namespace ApiCriptomonedas.Services
             _context.Transacciones.Add(nuevaTransaccion);
             await _context.SaveChangesAsync();
 
-            return nuevaTransaccion;
+            transaccion.Id = nuevaTransaccion.Id;
+            transaccion.money = totalGastado;
+
+            return transaccion;
         }
 
+        public async Task<bool> Put(int id, TransaccionesDTO transaccionDTO)
+        {
+            if (id != transaccionDTO.Id)
+            {
+                return false;
+            }
+            var transaccionExistente = await _context.Transacciones.FindAsync(id);
+            if (transaccionExistente == null)
+            {
+                return false;
+            }
+
+            transaccionExistente.CryptoCode = transaccionDTO.crypto_code;
+            transaccionExistente.Action = transaccionDTO.action;
+            transaccionExistente.CryptoAmount = transaccionDTO.crypto_amount;
+            transaccionExistente.Money = transaccionDTO.money;
+            transaccionExistente.DateTime = transaccionDTO.datetime;
+
+            _context.Entry(transaccionExistente).State = EntityState.Modified;
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
+
+        public async Task<bool> DeleteTransaccion(int id)
+        {
+            var transaccion = await _context.Transacciones.FindAsync(id);
+            if (transaccion == null)
+            {
+                return false;
+            }
+
+            _context.Transacciones.Remove(transaccion);
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
     }
 }

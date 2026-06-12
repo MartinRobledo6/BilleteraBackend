@@ -4,8 +4,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ApiCriptomonedas.Controllers
 {
-    [ApiController]
     [Route("transacciones")]
+    [ApiController]
     public class TransaccionesController : ControllerBase
     {
         private readonly ITransaccioneService _transaccioneService;
@@ -16,23 +16,60 @@ namespace ApiCriptomonedas.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Get()
+        public async Task<ActionResult<IEnumerable<TransaccionesDTO>>> Get()
         {
-            var transacciones = await _transaccioneService.GetTransacciones();
+            var transacciones = await _transaccioneService.Get();
             return Ok(transacciones);
         }
 
+        [HttpGet("{id}")]
+        public async Task<ActionResult<TransaccionesDTO>> GetTransaccion(int id)
+        {
+            var transaccion = await _transaccioneService.GetTransacciones(id);
+            if (transaccion == null)
+            {
+                return NotFound();
+            }
+            return Ok(transaccion);
+        }
+
         [HttpPost]
-        public async Task<IActionResult> Post(TransaccionesDTO transaccionesDTO)
+        public async Task<ActionResult<TransaccionesDTO>> Post(TransaccionesDTO transaccionesDTO)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
+            try
+            {
+                var nuevaTransaccion = await _transaccioneService.Post(transaccionesDTO);
+                return CreatedAtAction(nameof(GetTransaccion), new { id = nuevaTransaccion.Id }, nuevaTransaccion);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { mensaje = ex.Message });
+            }
+        }
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Put(int id, TransaccionesDTO transaccionesDTO)
+        {
+            bool result = await _transaccioneService.Put(id, transaccionesDTO);
+            if (!result)
+            {
+                return NotFound();
+            }
+            return NoContent();
+        }
 
-            var nuevaTransaccion = await _transaccioneService.AddTransaccion(transaccionesDTO);
-
-            return Ok(nuevaTransaccion);
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteTransaccion(int id)
+        {
+            bool result = await _transaccioneService.DeleteTransaccion(id);
+            if (!result)
+            {
+                return NotFound();
+            }
+            return NoContent();
         }
 
     }

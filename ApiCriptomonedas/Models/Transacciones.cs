@@ -16,5 +16,6 @@ namespace ApiCriptomonedas.Model
         [Column(TypeName = "decimal(18, 2)")]
         public decimal Money { get; set; }
         public DateTime DateTime { get; set; }
+        public int ClienteID { get; set; }  
     }
 }

@@ -1,12 +1,14 @@
 ﻿using ApiCriptomonedas.DTOs;
 using ApiCriptomonedas.Model;
-using ApiCriptomonedas.Models;
 
 namespace ApiCriptomonedas.Interfaces
 {
     public interface ITransaccioneService
     {
-        Task<IEnumerable<Transacciones>> GetTransacciones();
-        Task<Transacciones> AddTransaccion(TransaccionesDTO transaccion);
+        Task<List<TransaccionesDTO>> Get();
+        Task<TransaccionesDTO?> GetTransacciones(int id);
+        Task<TransaccionesDTO> Post(TransaccionesDTO transaccion);
+        Task<bool> Put(int id, TransaccionesDTO transacciones);
+        Task<bool> DeleteTransaccion(int id);
     }
 }
