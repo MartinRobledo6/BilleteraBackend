@@ -56,6 +56,21 @@ namespace ApiCriptomonedas.Services
 
         public async Task<TransaccionesDTO> Post(TransaccionesDTO transaccion)
         {
+            if (transaccion.crypto_amount <= 0)
+            {
+                throw new Exception("La cantidad debe ser mayor a cero.");
+            }
+
+            if (string.IsNullOrWhiteSpace(transaccion.crypto_code))
+            {
+                throw new Exception("Debe seleccionar una criptomoneda.");
+            }
+
+            if (transaccion.datetime > DateTime.Now)
+            {
+                throw new Exception("La fecha no puede ser futura.");
+            }
+
             string cryptoCodeLower = transaccion.crypto_code.ToLower();
 
             string urlCriptoya = $"https://criptoya.com/api/fiwind/{cryptoCodeLower}/ars";
