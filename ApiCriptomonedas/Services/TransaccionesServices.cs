@@ -38,7 +38,7 @@ namespace ApiCriptomonedas.Services
 
         public async Task<TransaccionesDTO?> GetTransacciones(int id)
         {
-            var transacciones = await _context.Transacciones.FindAsync(id);
+            var transacciones = await _context.Transacciones.FirstOrDefaultAsync(g => g.Id == id);
             if (transacciones == null)
             {
                 return null;
@@ -58,34 +58,17 @@ namespace ApiCriptomonedas.Services
         {
             string cryptoCodeLower = transaccion.crypto_code.ToLower();
 
-            if (transaccion.action == "sale")
-            {
-                var totalComprado = await _context.Transacciones
-                             .Where(t => t.CryptoCode == transaccion.crypto_code && t.Action == "purchase")
-                             .SumAsync(t => t.CryptoAmount);
-
-                var totalVendido = await _context.Transacciones
-                             .Where(t => t.CryptoCode == transaccion.crypto_code && t.Action == "sale")
-                             .SumAsync(t => t.CryptoAmount);
-
-                var saldoDisponible = totalComprado - totalVendido;
-                if (saldoDisponible < transaccion.crypto_amount)
-                {
-                    throw new Exception("No tenes saldo suficiente para vender esa cantidad");
-                }
-            }
-
             string urlCriptoya = $"https://criptoya.com/api/fiwind/{cryptoCodeLower}/ars";
 
             decimal precio = 0;
 
             try
             {
-                var response = await _httpClient.GetAsync(urlCriptoya);
+                var respuesta = await _httpClient.GetAsync(urlCriptoya);
 
-                if (response.IsSuccessStatusCode)
+                if (respuesta.IsSuccessStatusCode)
                 {
-                    var jsonString = await response.Content.ReadAsStringAsync();
+                    var jsonString = await respuesta.Content.ReadAsStringAsync();
                     using (JsonDocument doc = JsonDocument.Parse(jsonString))
                     {
                         precio = doc.RootElement.GetProperty("totalAsk").GetDecimal();
@@ -114,10 +97,6 @@ namespace ApiCriptomonedas.Services
 
             _context.Transacciones.Add(nuevaTransaccion);
             await _context.SaveChangesAsync();
-
-            transaccion.Id = nuevaTransaccion.Id;
-            transaccion.money = totalGastado;
-
             return transaccion;
         }
 
