@@ -112,7 +112,18 @@ namespace ApiCriptomonedas.Services
 
             _context.Transacciones.Add(nuevaTransaccion);
             await _context.SaveChangesAsync();
-            return transaccion;
+
+            var dto = new TransaccionesDTO
+            {
+                Id = nuevaTransaccion.Id,
+                crypto_code = nuevaTransaccion.CryptoCode,
+                action = nuevaTransaccion.Action,
+                crypto_amount = nuevaTransaccion.CryptoAmount,
+                money = nuevaTransaccion.Money,
+                datetime = nuevaTransaccion.DateTime,
+            };
+
+            return dto;
         }
 
         public async Task<bool> Put(int id, TransaccionesDTO transaccionDTO)
