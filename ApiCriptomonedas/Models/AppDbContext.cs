@@ -10,5 +10,6 @@ namespace ApiCriptomonedas.Models
         }
 
         public DbSet<Transacciones> Transacciones { get; set; }
+        public DbSet<Cliente> Cliente { get; set; }
     }
 }

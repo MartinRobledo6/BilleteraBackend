@@ -71,6 +71,24 @@ namespace ApiCriptomonedas.Services
                 throw new Exception("La fecha no puede ser futura.");
             }
 
+            if (transaccion.action == "sale")
+            {
+                var totalCompras = await _context.Transacciones
+                    .Where(t => t.ClienteID == transaccion.ClienteID && t.CryptoCode == transaccion.crypto_code && t.Action == "purchase")
+                    .SumAsync(t => t.CryptoAmount);
+
+                var totalVentas = await _context.Transacciones
+                     .Where(t => t.ClienteID == transaccion.ClienteID && t.CryptoCode == transaccion.crypto_code && t.Action == "sale")
+                     .SumAsync(t => t.CryptoAmount);
+
+                var saldoActual = totalCompras - totalVentas;
+
+                if (saldoActual < transaccion.crypto_amount) 
+                {
+                    throw new Exception($"Saldo insuficiente. Tienes {saldoActual} {transaccion.crypto_code} pero intentas vender {transaccion.crypto_amount}");
+                }
+            }
+
             string cryptoCodeLower = transaccion.crypto_code.ToLower();
 
             string urlCriptoya = $"https://criptoya.com/api/fiwind/{cryptoCodeLower}/ars";
@@ -108,6 +126,7 @@ namespace ApiCriptomonedas.Services
                 CryptoAmount = transaccion.crypto_amount,
                 Money = totalGastado,
                 DateTime = transaccion.datetime,
+                ClienteID = transaccion.ClienteID
             };
 
             _context.Transacciones.Add(nuevaTransaccion);
