@@ -31,6 +31,7 @@ namespace ApiCriptomonedas.Services
                 crypto_amount = t.CryptoAmount,
                 money = t.Money,
                 datetime = t.DateTime,
+                ClienteID = t.ClienteID,
             }).ToList();
 
             return transaccionesDTO;
