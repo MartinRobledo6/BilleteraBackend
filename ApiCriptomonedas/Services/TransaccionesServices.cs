@@ -146,7 +146,7 @@ namespace ApiCriptomonedas.Services
             return dto;
         }
 
-        public async Task<bool> Put(int id, TransaccionesDTO transaccionDTO)
+        public async Task<bool> Patch(int id, TransaccionesDTO transaccionDTO)
         {
             if (id != transaccionDTO.Id)
             {

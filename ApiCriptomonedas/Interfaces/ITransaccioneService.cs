@@ -8,7 +8,7 @@ namespace ApiCriptomonedas.Interfaces
         Task<List<TransaccionesDTO>> Get();
         Task<TransaccionesDTO?> GetTransacciones(int id);
         Task<TransaccionesDTO> Post(TransaccionesDTO transaccion);
-        Task<bool> Put(int id, TransaccionesDTO transacciones);
+        Task<bool> Patch(int id, TransaccionesDTO transacciones);
         Task<bool> DeleteTransaccion(int id);
     }
 }

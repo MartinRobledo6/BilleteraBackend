@@ -50,10 +50,10 @@ namespace ApiCriptomonedas.Controllers
                 return BadRequest(new { mensaje = ex.Message });
             }
         }
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Put(int id, TransaccionesDTO transaccionesDTO)
+        [HttpPatch("{id}")]
+        public async Task<IActionResult> Patch(int id, TransaccionesDTO transaccionesDTO)
         {
-            bool result = await _transaccioneService.Put(id, transaccionesDTO);
+            bool result = await _transaccioneService.Patch(id, transaccionesDTO);
             if (!result)
             {
                 return NotFound();
